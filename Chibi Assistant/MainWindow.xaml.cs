@@ -169,8 +169,7 @@ namespace ChibiAssistant
         {
             try
             {
-                // Gunakan model Gemini 1.5 Flash (Cepat & Pintar)
-                string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={ApiKey}";
+                string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={ApiKey}";
 
                 // Kita kasih "System Prompt" rahasia biar AI-nya sadar dia itu Chibi
                 string prompt = $"Kamu adalah asisten desktop bernama Chibi. Sifatmu ceria, imut, agak tsundere tapi perhatian, dan selalu memanggil usernya dengan sebutan 'Nonoo'. Jawablah pesan ini dengan singkat, lucu, dan gunakan emoji: {message}";
