@@ -1,0 +1,28 @@
+﻿<Window x:Class="ChibiAssistant.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        Title="Chibi Assistant" Height="450" Width="800"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" MouseDown="Window_MouseDown">
+
+    <Grid Background="Transparent">
+
+        <Image x:Name="ChibiImage"
+               gif:ImageBehavior.AnimatedSource="/Assets/evernight-march-7th.gif"
+               Stretch="Uniform"
+               Width="200" Height="200">
+
+            <Image.ContextMenu>
+                <ContextMenu x:Name="MyContextMenu">
+                    <MenuItem Header="Buka Brave" />
+                    <MenuItem Header="Buka VS Code" />
+                    <Separator Background="#3F3F46" Margin="10,5,10,5"/>
+                    <MenuItem Header="Tutup Chibi" />
+                </ContextMenu>
+            </Image.ContextMenu>
+
+        </Image>
+    </Grid>
+</Window>
+
