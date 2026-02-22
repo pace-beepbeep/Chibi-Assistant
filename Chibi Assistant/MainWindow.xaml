@@ -7,22 +7,53 @@
         Topmost="True" MouseDown="Window_MouseDown">
 
     <Grid Background="Transparent">
-
         <Image x:Name="ChibiImage"
                gif:ImageBehavior.AnimatedSource="/Assets/evernight-march-7th.gif"
                Stretch="Uniform"
-               Width="200" Height="200">
-
+               Width="200" Height="200" HorizontalAlignment="Left">
             <Image.ContextMenu>
                 <ContextMenu x:Name="MyContextMenu">
-                    <MenuItem Header="Buka Brave" />
-                    <MenuItem Header="Buka VS Code" />
-                    <Separator Background="#3F3F46" Margin="10,5,10,5"/>
-                    <MenuItem Header="Tutup Chibi" />
                 </ContextMenu>
             </Image.ContextMenu>
-
         </Image>
+
+        <Popup x:Name="ChatPopup" PlacementTarget="{Binding ElementName=ChibiImage}" Placement="Right" StaysOpen="True" AllowsTransparency="True">
+            <Border Background="#1E1E1E" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="12" Width="300" Height="400" Padding="10" Margin="10,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Ngobrol sama Chibi 💕" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" Foreground="DarkGray" BorderThickness="0" Click="CloseChat_Click" Cursor="Hand"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ChatHistoryList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding BackgroundColor}" CornerRadius="8" Padding="10" Margin="0,5" HorizontalAlignment="{Binding Alignment}">
+                                        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="White"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="2" Margin="0,10,0,0">
+                        <TextBlock x:Name="TypingIndicator" Text="Chibi sedang mengetik..." Foreground="Gray" FontStyle="Italic" Visibility="Collapsed" Margin="0,0,0,5"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="ChatInput" Grid.Column="0" Background="#2D2D30" Foreground="White" BorderThickness="0" Padding="8" KeyDown="ChatInput_KeyDown"/>
+                            <Button x:Name="SendBtn" Grid.Column="1" Content="Kirim" Margin="5,0,0,0" Padding="10,5" Background="#007ACC" Foreground="White" BorderThickness="0" Click="SendBtn_Click" Cursor="Hand"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Popup>
     </Grid>
 </Window>
-
