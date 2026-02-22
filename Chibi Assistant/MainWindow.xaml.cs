@@ -17,7 +17,7 @@ namespace ChibiAssistant
     {
 
         private static readonly HttpClient client = new HttpClient();
-        private const string ApiKey = "AIzaSyCgIU2khsoARuUKjdhI6rzs0k_bYeyEoJg";
+        private const string ApiKey = "AIzaSyDsggQyrh-mU38JrlQkeTCQYUz-x-EVfPg";
         // Menyimpan riwayat pesan agar otomatis update di UI
         public ObservableCollection<ChatMessage> Messages { get; set; } = new ObservableCollection<ChatMessage>();
 
