@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Chibi_Assistant
+namespace Chibi_Assistant.Models
 {
     public class ShortcutItem
     {
