@@ -4,10 +4,10 @@
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
         Title="Chibi Assistant" Height="450" Width="800"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        Topmost="True" MouseDown="Window_MouseDown">
+        Topmost="True" MouseDown="Window_MouseDown"
+        Loaded="Window_Loaded">
     <Grid Background="Transparent">
         <Image x:Name="ChibiImage"
-               gif:ImageBehavior.AnimatedSource="/Assets/evernight-march-7th.gif"
                Stretch="Uniform"
                Width="200" Height="200" HorizontalAlignment="Left">
             <Image.ContextMenu>

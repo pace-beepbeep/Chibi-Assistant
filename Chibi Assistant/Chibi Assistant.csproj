@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <None Remove="Assets\evernight-march-7th.gif" />
+    <None Remove="Assets\nahida.gif" />
+    <None Remove="Assets\hutao.gif" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,16 +27,22 @@
     <Resource Include="Assets\evernight-march-7th.gif">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Assets\nahida.gif" Condition="Exists('Assets\nahida.gif')">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\hutao.gif" Condition="Exists('Assets\hutao.gif')">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
     <None Update="shortcuts.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\" />
+    <None Update="characters.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
+

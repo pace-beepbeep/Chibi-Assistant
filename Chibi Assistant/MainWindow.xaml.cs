@@ -1,5 +1,6 @@
 ﻿using Chibi_Assistant.Models;
 using Chibi_Assistant.Services;
+using Chibi_Assistant.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,6 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using WpfAnimatedGif;
 
 namespace ChibiAssistant
 {
@@ -31,9 +33,21 @@ namespace ChibiAssistant
         private bool _isRecording = false; // Penanda apakah mic sedang aktif
         private bool _isBusy = false;      // Penanda asisten sedang berpikir (loading)
 
+        // ── Character Theme & Settings ─────────────────────────────
+        private List<CharacterTheme> _characters = new();
+        private CharacterTheme _currentCharacter;
+        private SettingsService _settingsService = new();
+        private UserSettings _userSettings;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            // Load settings & characters
+            _userSettings = _settingsService.Load();
+            LoadCharacters();
+            ApplyCharacterTheme();
+
             LoadShortcuts();
 
             ChatHistoryList.ItemsSource = Messages;
@@ -91,6 +105,82 @@ namespace ChibiAssistant
             }
         }
 
+        // ── CHARACTER THEME SYSTEM ────────────────────────────────
+        private void LoadCharacters()
+        {
+            try
+            {
+                string jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "characters.json");
+                if (!File.Exists(jsonPath))
+                {
+                    // Fallback: buat default character
+                    _characters = new List<CharacterTheme>
+                    {
+                        new CharacterTheme
+                        {
+                            Id = "march7th",
+                            DisplayName = "March 7th (Evernight)",
+                            GifFileName = "evernight-march-7th.gif",
+                            Personality = "Kamu adalah asisten desktop bernama Chibi. Sifatmu ceria, imut, agak tsundere tapi perhatian, dan selalu memanggil usernya dengan sebutan 'Nonoo'. Jawablah pesan dengan singkat, lucu, dan gunakan emoji sesekali.",
+                            Greeting = "Halo Nonoo~ Ada yang bisa Chibi bantu hari ini? 💕"
+                        }
+                    };
+                    return;
+                }
+
+                string json = File.ReadAllText(jsonPath);
+                _characters = JsonSerializer.Deserialize<List<CharacterTheme>>(json) ?? new List<CharacterTheme>();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Gagal memuat characters.json: " + ex.Message);
+                _characters = new List<CharacterTheme>();
+            }
+        }
+
+        private void ApplyCharacterTheme()
+        {
+            // Cari karakter yang dipilih
+            _currentCharacter = _characters.Find(c => c.Id == _userSettings.SelectedCharacterId)
+                                ?? (_characters.Count > 0 ? _characters[0] : null);
+
+            if (_currentCharacter == null) return;
+
+            // Set animated GIF
+            try
+            {
+                var uri = new Uri($"pack://application:,,,/Assets/{_currentCharacter.GifFileName}", UriKind.Absolute);
+                var image = new System.Windows.Media.Imaging.BitmapImage(uri);
+                ImageBehavior.SetAnimatedSource(ChibiImage, image);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Gagal memuat GIF karakter: {ex.Message}");
+            }
+        }
+
+        private void OpenSettings()
+        {
+            var settingsWindow = new SettingsWindow(_characters, _userSettings, _settingsService);
+            settingsWindow.Owner = this;
+            settingsWindow.OnSettingsSaved += () =>
+            {
+                // Reload settings dan apply
+                _userSettings = _settingsService.Load();
+                ApplyCharacterTheme();
+            };
+            settingsWindow.ShowDialog();
+        }
+
+        // ── STARTUP POSITION ───────────────────────────────────
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Posisikan chibi tepat di pojok kanan bawah layar (di atas taskbar)
+            var workArea = SystemParameters.WorkArea;
+            this.Left = workArea.Right - ChibiImage.Width - 20;  // 200px chibi + sedikit margin
+            this.Top = workArea.Bottom - ChibiImage.Height - 100;
+        }
+
         // ── DRAG & DOUBLE CLICK ───────────────────────────────────
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -100,7 +190,10 @@ namespace ChibiAssistant
                 {
                     ChatPopup.IsOpen = !ChatPopup.IsOpen;
                     if (ChatPopup.IsOpen && Messages.Count == 0)
-                        Messages.Add(new ChatMessage { Sender = "Chibi", Message = "Halo Nonoo~ Ada yang bisa Chibi bantu hari ini? 💕", IsAI = true });
+                    {
+                        string greeting = _currentCharacter?.Greeting ?? "Halo~ Ada yang bisa dibantu? 💕";
+                        Messages.Add(new ChatMessage { Sender = "Chibi", Message = greeting, IsAI = true });
+                    }
                 }
                 else
                 {
@@ -194,7 +287,8 @@ namespace ChibiAssistant
             if (isCommand)
             {
                 Messages.Add(new ChatMessage { Sender = "Chibi", Message = commandResponse, IsAI = true });
-                _ = Task.Run(() => SpeakText(commandResponse));
+                if (_userSettings.IsTtsEnabled)
+                    _ = Task.Run(() => SpeakText(commandResponse));
                 return;
             }
 
@@ -211,8 +305,9 @@ namespace ChibiAssistant
             // Tambah respon Chibi ke UI
             Messages.Add(new ChatMessage { Sender = "Chibi", Message = aiResponse, IsAI = true });
 
-            // TTS: Chibi bicara (Tanpa menunggu prosesnya selesai)
-            _ = Task.Run(() => SpeakText(aiResponse));
+            // TTS: Chibi bicara (Tanpa menunggu prosesnya selesai) — hanya jika TTS aktif
+            if (_userSettings.IsTtsEnabled)
+                _ = Task.Run(() => SpeakText(aiResponse));
 
             // Reset UI
             TypingIndicator.Visibility = Visibility.Collapsed;
@@ -230,7 +325,12 @@ namespace ChibiAssistant
             {
                 // Menggunakan gemini-1.5-flash (lebih baru/cepat dibanding 2.5 yang belum rilis umum)
                 string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={ApiKey}";
-                string prompt = $"Kamu adalah asisten desktop bernama Chibi. Sifatmu ceria, imut, agak tsundere tapi perhatian, dan selalu memanggil usernya dengan sebutan 'Nonoo'. Jawablah pesan ini dengan singkat, lucu, dan gunakan emoji: {message}";
+
+                // Gunakan personality dari karakter yang dipilih
+                string personality = _currentCharacter?.Personality
+                    ?? "Kamu adalah asisten desktop bernama Chibi. Sifatmu ceria, imut, agak tsundere tapi perhatian, dan selalu memanggil usernya dengan sebutan 'Nonoo'. Jawablah pesan ini dengan singkat, lucu, dan gunakan emoji:";
+
+                string prompt = $"{personality} {message}";
 
                 var requestBody = new
                 {
@@ -267,6 +367,7 @@ namespace ChibiAssistant
             {
                 using var synth = new System.Speech.Synthesis.SpeechSynthesizer();
                 synth.SetOutputToDefaultAudioDevice();
+                synth.Volume = _userSettings.TtsVolume;
 
                 // Bersihkan emoji agar TTS Windows tidak bingung
                 string cleanText = System.Text.RegularExpressions.Regex.Replace(text, @"[^\u0000-\u007F]", "");
@@ -298,6 +399,14 @@ namespace ChibiAssistant
                 }
 
                 contextMenu.Items.Add(new Separator());
+
+                // ⚙ Menu Pengaturan
+                MenuItem settingsMenu = new MenuItem { Header = "⚙ Pengaturan" };
+                settingsMenu.Click += (s, e) => OpenSettings();
+                contextMenu.Items.Add(settingsMenu);
+
+                contextMenu.Items.Add(new Separator());
+
                 MenuItem exitMenu = new MenuItem { Header = "❌ Tutup Chibi" };
                 exitMenu.Click += (s, e) => Application.Current.Shutdown();
                 contextMenu.Items.Add(exitMenu);
